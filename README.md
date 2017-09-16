@@ -2,8 +2,15 @@
 
 A proof of concept for https://github.com/chef/mixlib-authentication/pull/27 showing knife operations happening via `ssh-agent` signing.
 
-* run `kitchen converge` to demonstrate
-* run `kitchen login` to run additional knife operations
+`kitchen test` will
+* install and start the chef server
+* create a user
+* create an org with that user as admin
+* create a knife configuration file suitable for testing
+* start an ssh-agent and load the chef client key
+* perform a knife operation using ssh-agent to sign
+
+`kitchen converge` -> `kitchen login` can be used to run additional knife operations
 
 ```
 kitchen$ sudo SSH_AUTH_SOCK=/tmp/aadmin.agent knife environment show _default -c /etc/opscode/users/aadmin.rb
