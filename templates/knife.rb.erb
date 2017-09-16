@@ -1,0 +1,8 @@
+current_dir = File.dirname(__FILE__)
+log_level                :info
+log_location             STDOUT
+node_name                "<%= @username %>"
+client_key               "#{current_dir}/<%= @username %>.pub"
+chef_server_url          "<%= @platform_public_url %>/organizations/<%= @orgname %>"
+cookbook_path            ["#{current_dir}/../cookbooks"]
+authentication_protocol_version "1.3"
