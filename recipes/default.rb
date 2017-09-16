@@ -44,16 +44,9 @@ execute 'start-ssh-agent' do
   command 'ssh-agent -a /tmp/aadmin.agent'
 end
 
+# private key is deleted after loading in agent
 execute 'ssh-add-key' do
   command 'ssh-add /etc/opscode/users/aadmin.pem'
-  environment(
-    SSH_AUTH_SOCK: '/tmp/aadmin.agent'
-  )
-end
-
-# private key is deleted if loaded in agent
-execute 'ssh-list-key' do
-  command 'ssh-add -l'
   environment(
     SSH_AUTH_SOCK: '/tmp/aadmin.agent'
   )
@@ -83,12 +76,4 @@ end
 # workaround for chef server self signed certificate
 execute 'knife-ssl-fetch' do
   command 'knife ssl fetch -c /etc/opscode/users/aadmin.rb'
-end
-
-# perform a knife operation
-execute 'knife-user-list' do
-  command 'knife user list -c /etc/opscode/users/aadmin.rb'
-  environment(
-    SSH_AUTH_SOCK: '/tmp/aadmin.agent'
-  )
 end
