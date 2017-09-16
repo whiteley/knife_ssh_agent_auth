@@ -18,14 +18,19 @@ chef_org 'ponyville' do
   admins %w(aadmin)
 end
 
+# openssl public key generation fails with 0644
 file '/etc/opscode/users/aadmin.pem' do
   mode '0600'
 end
 
+# public key is required for knife.rb
 bash 'generate-public-key' do
   code 'openssl rsa -in /etc/opscode/users/aadmin.pem -pubout | tee /etc/opscode/users/aadmin.pub'
 end
 
+# template has required configuration to test ssh-agent signing
+# client_key points to public key
+# authentication_protocol_version set to 1.3
 template '/etc/opscode/users/aadmin.rb' do
   source 'knife.rb.erb'
   variables(
@@ -46,6 +51,7 @@ execute 'ssh-add-key' do
   )
 end
 
+# private key is deleted if loaded in agent
 execute 'ssh-list-key' do
   command 'ssh-add -l'
   environment(
@@ -54,15 +60,18 @@ execute 'ssh-list-key' do
   notifies :delete, 'file[/etc/opscode/users/aadmin.pem]', :immediately
 end
 
+# update required dependency
 chef_gem 'net-ssh' do
   version '4.2.0'
 end
 
+# branch for https://github.com/chef/mixlib-authentication/pull/27
 git '/tmp/mixlib-authentication' do
   repository 'https://github.com/whiteley/mixlib-authentication.git'
   revision 'ssh-agent'
 end
 
+# build and install patched mixlib-authentication
 execute 'build-mixlib-authentication' do
   command 'rake install:local'
   cwd '/tmp/mixlib-authentication'
@@ -71,10 +80,12 @@ execute 'build-mixlib-authentication' do
   )
 end
 
+# workaround for chef server self signed certificate
 execute 'knife-ssl-fetch' do
   command 'knife ssl fetch -c /etc/opscode/users/aadmin.rb'
 end
 
+# perform a knife operation
 execute 'knife-user-list' do
   command 'knife user list -c /etc/opscode/users/aadmin.rb'
   environment(
